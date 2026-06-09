@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = 'https://parrilla-backend-production.up.railway.app';
 
 async function login() {
   const correo = document.getElementById('correo').value.trim();

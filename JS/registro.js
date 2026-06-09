@@ -1,5 +1,5 @@
 
-    const API = 'http://localhost:3000';
+    const API = 'https://parrilla-backend-production.up.railway.app';
 
     function checkPass() {
       const pass = document.getElementById('contrasena').value;

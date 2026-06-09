@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = 'https://parrilla-backend-production.up.railway.app';
 const token = localStorage.getItem('token');
 const rol = localStorage.getItem('rol');
 const nombreUsuario = localStorage.getItem('nombre') || 'Cliente';

@@ -1,5 +1,5 @@
 
-  const API = 'http://localhost:3000';
+  const API = 'https://parrilla-backend-production.up.railway.app';
   const token = localStorage.getItem('token');
   const nombre = localStorage.getItem('nombre') || 'Admin';
   let productoEditandoId = null;
