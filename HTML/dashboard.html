@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dashboard - Parrillas El Gran Máximo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../JS/dashboard.js" defer></script>
+  <script src="../JS/auth.js"></script>
+  <link rel="stylesheet" href="../CSS/dashboard.css">
+</head>
+<body>
+
+<div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="logo_new_parrillas_Mesa_de_trabajo_1.png" alt="Logo" onerror="this.style.display='none'" />
+    <div class="sidebar-logo-text">
+      <div class="title">PARRILLAS</div>
+      <div class="sub">El Gran Máximo</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="showPage('inicio')">
+      <span class="icon">🏠</span> Inicio
+    </div>
+    <div class="nav-item" onclick="showPage('pedidos')">
+      <span class="icon">📋</span> Pedidos
+      <span class="nav-badge" id="badge-pedidos">0</span>
+    </div>
+
+    <div class="nav-section">Gestión</div>
+    <div class="nav-item" onclick="showPage('productos')">
+      <span class="icon">🥩</span> Productos
+    </div>
+    <div class="nav-item" onclick="showPage('inventario')">
+      <span class="icon">🧃</span> Inventario
+    </div>
+    <div class="nav-item" onclick="showPage('clientes')">
+      <span class="icon">👥</span> Clientes
+    </div>
+
+    <div class="nav-section">Finanzas</div>
+    <div class="nav-item" onclick="showPage('ventas')">
+      <span class="icon">💰</span> Ventas
+    </div>
+    <div class="nav-item" onclick="showPage('configuracion')">
+      <span class="icon">⚙️</span> Configuración
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-info">
+      <div class="admin-avatar" id="admin-avatar">A</div>
+      <div>
+        <div class="admin-name" id="admin-name">Admin</div>
+        <div class="admin-role">Administrador</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div>
+        <div class="page-title" id="topbar-title">INICIO</div>
+        <div class="page-sub" id="topbar-sub">Resumen del día</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="tasa-display" id="tasa-display">💵 Tasa: $0.00</div>
+      <button class="refresh-btn" onclick="cargarTodo()" title="Actualizar">🔄</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PAGE: INICIO -->
+    <div class="page active" id="page-inicio">
+      <div class="stats-grid">
+        <div class="stat-card dorado">
+          <div class="stat-icon">📋</div>
+          <div class="stat-value" id="stat-pedidos-hoy">0</div>
+          <div class="stat-label">Pedidos Hoy</div>
+        </div>
+        <div class="stat-card verde">
+          <div class="stat-icon">💵</div>
+          <div class="stat-value" id="stat-ventas-hoy">$0</div>
+          <div class="stat-label">Ventas Hoy</div>
+        </div>
+        <div class="stat-card rojo">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value" id="stat-pendientes">0</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card azul">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="stat-clientes">0</div>
+          <div class="stat-label">Clientes</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 Pedidos Recientes</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('pedidos')">Ver todos</button>
+          </div>
+          <div class="card-body">
+            <div id="pedidos-recientes-list"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 Ventas Esta Semana</div>
+          </div>
+          <div class="card-body">
+            <div class="chart-bars" id="chart-ventas"></div>
+            <div style="display:flex; justify-content:space-between; margin-top:8px;" id="chart-labels"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🧃 Stock Crítico</div>
+        </div>
+        <div class="card-body" id="stock-critico-list"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: PEDIDOS -->
+    <div class="page" id="page-pedidos">
+      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="filtrarPedidos('todos')">Todos</button>
+        <button class="btn btn-ghost" onclick="filtrarPedidos('pendiente')">⏳ Pendientes</button>
+        <button class="btn btn-ghost" onclick="filtrarPedidos('preparando')">🔥 Preparando</button>
+        
+        
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Gestión de Pedidos</div>
+          <span id="pedidos-count" style="font-size:12px; color:var(--texto2);">0 pedidos</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Referencia</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="pedidos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PRODUCTOS -->
+    <div class="page" id="page-productos">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+        <button class="btn btn-gold btn-sm" onclick="abrirNuevoProducto()">+ Agregar</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🥩 Productos</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Precio $</th>
+                <th>Precio Bs</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="productos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-producto">
+  <div class="modal">
+    <div class="modal-title" id="modal-producto-title">+ Nuevo Producto</div>
+
+    <div class="input-group-d">
+      <label class="input-label">Nombre</label>
+      <input type="text" class="input" id="mprod-nombre" placeholder="Nombre del producto" />
+    </div>
+
+    <div class="input-group-d">
+      <label class="input-label">Precio en $</label>
+      <input type="number" class="input" id="mprod-precio" placeholder="0.00" step="0.01" />
+    </div>
+
+    <div class="input-group-d">
+      <label class="input-label">Tipo</label>
+      <select class="input" id="mprod-tipo" onchange="onTipoChange()">
+        <option value="parrilla">🥩 Parrilla</option>
+        <option value="bebida">🧃 Bebida</option>
+      </select>
+    </div>
+
+    <div class="input-group-d" id="campo-tamano">
+      <label class="input-label">Tamaño</label>
+      <select class="input" id="mprod-tamano">
+        <option value="pequeña">🟢 Pequeña</option>
+        <option value="mediana" selected>🟡 Mediana</option>
+        <option value="grande">🔴 Grande</option>
+      </select>
+    </div>
+
+    <div class="input-group-d">
+  <label class="input-label">Categoría</label>
+  <div style="display:flex; gap:8px;">
+    <select class="input" id="mprod-categoria" style="flex:1;">
+      <option value="">Cargando...</option>
+    </select>
+    <button class="btn btn-ghost" type="button" onclick="mostrarNuevaCategoria()" style="white-space:nowrap;">+ Nueva</button>
+  </div>
+</div>
+
+<div class="input-group-d" id="campo-nueva-categoria" style="display:none;">
+  <label class="input-label">Nueva Categoría</label>
+  <div style="display:flex; gap:8px;">
+    <input type="text" class="input" id="mprod-nueva-categoria" placeholder="Ej: Cerveza, Jugo, Refresco..." style="flex:1;" />
+    <button class="btn btn-gold" type="button" onclick="crearCategoria()">Crear</button>
+  </div>
+</div>
+
+    <div class="input-group-d" id="campo-imagen" style="display:none;">
+      <label class="input-label">Imagen</label>
+      <div style="border:2px dashed rgba(245,168,0,0.3); border-radius:10px; padding:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('mprod-img-input').click()">
+        <img id="mprod-img-preview" style="display:none; width:100%; max-height:120px; object-fit:cover; border-radius:8px;" />
+        <div id="mprod-img-label" style="display:flex; flex-direction:column; align-items:center; color:var(--texto2);">
+          <div style="font-size:28px;">📷</div>
+          <div style="font-size:12px; margin-top:4px;">Toca para subir imagen</div>
+        </div>
+      </div>
+      <input type="file" id="mprod-img-input" accept="image/*" style="display:none;" onchange="onImagenSelect(event)" />
+      <div style="margin-top:12px;">
+        <label class="input-label">Stock inicial</label>
+        <input type="number" class="input" id="mprod-stock" placeholder="0" min="0" value="0" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-producto')">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+    <!-- PAGE: INVENTARIO -->
+    <div class="page" id="page-inventario">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🧃 Inventario de Bebidas</div>
+          <button class="btn btn-gold btn-sm" onclick="abrirModalBebida()">+ Agregar</button>
+        </div>
+        <div class="card-body" id="inventario-list"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CLIENTES -->
+    <div class="page" id="page-clientes">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👥 Clientes Registrados</div>
+          <span id="clientes-count" style="font-size:12px; color:var(--texto2);">0 clientes</span>
+        </div>
+        <div class="card-body" id="clientes-list"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: VENTAS -->
+    <div class="page" id="page-ventas">
+      <div class="stats-grid" style="grid-template-columns: repeat(3,1fr);">
+        <div class="stat-card verde">
+          <div class="stat-icon">💵</div>
+          <div class="stat-value" id="total-ventas-mes">$0</div>
+          <div class="stat-label">Ventas del Mes</div>
+        </div>
+        <div class="stat-card dorado">
+          <div class="stat-icon">📋</div>
+          <div class="stat-value" id="total-pedidos-mes">0</div>
+          <div class="stat-label">Pedidos del Mes</div>
+        </div>
+        <div class="stat-card azul">
+          <div class="stat-icon">📈</div>
+          <div class="stat-value" id="ticket-promedio">$0</div>
+          <div class="stat-label">Ticket Promedio</div>
+        </div>
+      </div>
+
+      <!-- MODAL DETALLE VENTA -->
+<div class="modal-overlay" id="modal-detalle-venta">
+  <div class="modal" style="max-width:500px; width:90%;">
+    <div class="modal-title">🧾 Detalle del Pedido</div>
+    <div id="detalle-venta-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-detalle-venta')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 Historial de Ventas</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Total $</th>
+                <th>Total Bs</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="ventas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: CONFIGURACION -->
+    <div class="page" id="page-configuracion">
+      <div class="config-section">
+        <div class="config-title">💵 Tasa del Dólar</div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:200px;">
+                <label class="input-label">Tasa actual (Bs por $1)</label>
+                <input type="number" class="input" id="nueva-tasa" placeholder="Ej: 36.50" step="0.01" />
+              </div>
+              <button class="btn btn-gold" onclick="actualizarTasa()">Actualizar Tasa</button>
+            </div>
+            <p style="font-size:12px; color:var(--texto2); margin-top:10px;">
+              ⚡ Al actualizar la tasa, todos los precios en Bs se recalcularán automáticamente.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <div class="config-title">🥩 Precios de Productos</div>
+        <div class="card">
+          <div class="card-body">
+            <div id="precios-productos-list"></div>
+            <div style="margin-top:16px;">
+              <button class="btn btn-gold" onclick="guardarPrecios()">💾 Guardar Precios</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</main>
+
+<!-- MODAL PEDIDO -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal">
+    <div class="modal-title">✏️ Actualizar Pedido</div>
+    <input type="hidden" id="modal-pedido-id" />
+    <div class="input-group-d">
+      <label class="input-label">Estado</label>
+      <select class="input" id="modal-pedido-estado">
+        <option value="pendiente">⏳ Pendiente</option>
+        <option value="preparando">🔥 Preparando</option>
+        <option value="entregado">✅ Entregado</option>
+        <option value="cancelado">❌ Cancelado</option>
+      </select>
+    </div>
+    <div class="input-group-d">
+      <label class="input-label">Referencia de Pago</label>
+      <input type="text" class="input" id="modal-pedido-ref" placeholder="Número de referencia" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-pedido')">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarPedido()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal-producto duplicado eliminado -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+
+</body>
+</html>

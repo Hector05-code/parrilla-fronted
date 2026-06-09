@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Empleado - Parrillas El Gran Máximo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />  
+  <link rel="stylesheet" href="../CSS/empleado.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="emp-header">
+    <div class="emp-logo">
+      <img src="logo_new_parrillas_Mesa_de_trabajo_1.png" alt="Logo" onerror="this.style.display='none'" />
+      <div>
+        <div class="emp-logo-name">PARRILLAS</div>
+        <div class="emp-logo-sub">El Gran Máximo</div>
+      </div>
+    </div>
+    <div class="emp-header-right">
+      <div class="tasa-chip" id="tasa-chip">💵 Bs 0.00</div>
+      <div class="emp-user" id="emp-user">Empleado</div>
+      <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="emp-content">
+
+    <!-- PAGE: PEDIDOS ACTIVOS -->
+    <div class="page active" id="page-activos">
+      <div class="page-header">
+        <div class="page-title-text">🔥 PEDIDOS ACTIVOS</div>
+        <button class="btn btn-gold btn-sm" onclick="cargarPedidosActivos()">🔄 Actualizar</button>
+      </div>
+      <div id="pedidos-activos-list"></div>
+    </div>
+
+    <!-- PAGE: NUEVO PEDIDO -->
+    <div class="page" id="page-nuevo">
+      <div class="page-header">
+        <div class="page-title-text">📝 NUEVO PEDIDO</div>
+      </div>
+
+      <!-- PASO 1: Buscar cliente -->
+      <div class="step-card" id="paso-cliente">
+        <div class="step-num">1</div>
+        <div class="step-title">Identificar Cliente</div>
+
+        <div class="input-group">
+          <label class="input-label">Cédula del Cliente</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="input-field" id="cedula-buscar" placeholder="Ej: 12345678" style="flex:1;" />
+            <button class="btn btn-gold" onclick="buscarCliente()">Buscar</button>
+          </div>
+        </div>
+
+        <div id="cliente-encontrado" style="display:none;">
+          <div class="cliente-chip">
+            <span class="cliente-chip-avatar" id="cli-avatar">C</span>
+            <div>
+              <div class="cliente-chip-nombre" id="cli-nombre">-</div>
+              <div class="cliente-chip-data" id="cli-data">-</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="cambiarCliente()">Cambiar</button>
+          </div>
+        </div>
+
+        <!-- Formulario nuevo cliente -->
+        <div id="form-nuevo-cliente" style="display:none;">
+          <div style="font-size:12px; color:var(--dorado); margin-bottom:12px;">⚠️ Cliente no encontrado — registrar nuevo</div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label class="input-label">Nombre</label>
+              <input type="text" class="input-field" id="nc-nombre" placeholder="Nombre" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Apellido</label>
+              <input type="text" class="input-field" id="nc-apellido" placeholder="Apellido" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Teléfono</label>
+            <input type="text" class="input-field" id="nc-telefono" placeholder="04141234567" />
+          </div>
+          <button class="btn btn-gold btn-block" onclick="registrarNuevoCliente()">Registrar Cliente</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: Tipo de pedido -->
+      <div class="step-card" id="paso-tipo">
+        <div class="step-num">2</div>
+        <div class="step-title">Tipo de Pedido</div>
+
+        <div class="tipo-btns">
+          <button class="tipo-btn active" id="btn-sitio" onclick="seleccionarTipo('sitio')">
+            🪑 En Sitio
+          </button>
+          <button class="tipo-btn" id="btn-delivery" onclick="seleccionarTipo('delivery')">
+            🛵 Delivery
+          </button>
+        </div>
+
+        <div id="campo-direccion" style="display:none; margin-top:12px;">
+          <label class="input-label">Dirección de Entrega</label>
+          <input type="text" class="input-field" id="direccion-input" placeholder="Calle, sector, referencia..." />
+        </div>
+      </div>
+
+      <!-- PASO 3: Productos -->
+      <div class="step-card" id="paso-productos">
+        <div class="step-num">3</div>
+        <div class="step-title">Seleccionar Productos</div>
+
+        <div class="cats-emp">
+          <button class="cat-pill active" onclick="filtrarProductos('todos', this)">Todos</button>
+          <button class="cat-pill" onclick="filtrarProductos('parrilla', this)">🥩 Parrillas</button>
+          <button class="cat-pill" onclick="filtrarProductos('bebida', this)">🧃 Bebidas</button>
+        </div>
+
+        <div class="productos-emp-grid" id="productos-emp-grid"></div>
+      </div>
+
+      <!-- PASO 4: Carrito y pago -->
+      <div class="step-card" id="paso-pago">
+        <div class="step-num">4</div>
+        <div class="step-title">Resumen y Pago</div>
+
+        <div id="carrito-emp-list"></div>
+
+        <div class="resumen-emp" id="resumen-emp" style="display:none;">
+          <div class="resumen-row"><span>Subtotal $</span><span id="emp-subtotal-usd">$0.00</span></div>
+          <div class="resumen-row"><span>Total Bs</span><span id="emp-subtotal-bs">Bs 0.00</span></div>
+          <div class="resumen-row total-row"><span>TOTAL</span><span id="emp-total">$0.00</span></div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <label class="input-label">Método de Pago</label>
+          <div class="metodos-flex" id="emp-metodos-list"></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label class="input-label">Referencia de Pago</label>
+          <input type="text" class="input-field" id="emp-referencia" placeholder="Número de referencia" />
+        </div>
+
+        <button class="btn btn-gold btn-block" style="margin-top:16px; padding:14px; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px;" onclick="confirmarPedido()">
+          CONFIRMAR PEDIDO 🔥
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="emp-bottom-nav">
+    <button class="emp-nav-btn active" id="nav-activos" onclick="showPage('activos')">
+      <span class="nav-icon">🔥</span>
+      Activos
+    </button>
+    <button class="emp-nav-btn" id="nav-nuevo" onclick="showPage('nuevo')">
+      <span class="nav-icon">➕</span>
+      Nuevo
+    </button>
+  </nav>
+
+  <!-- MODAL CAMBIAR ESTADO -->
+  <div class="modal-overlay" id="modal-estado">
+    <div class="modal">
+      <div class="modal-title">🔄 Cambiar Estado</div>
+      <input type="hidden" id="estado-pedido-id" />
+      <div style="font-size:13px; color:var(--texto2); margin-bottom:16px;" id="estado-pedido-info"></div>
+      <div class="estados-grid">
+        <button class="estado-btn preparando" onclick="cambiarEstado('preparando')">🔥 Preparando</button>
+        <button class="estado-btn entregado"  onclick="cambiarEstado('entregado')">✅ Entregado</button>
+        <button class="estado-btn cancelado"  onclick="cambiarEstado('cancelado')">❌ Cancelado</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-estado')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="../JS/empleado.js"></script>
+  <script src="../JS/auth.js"></script>
+</body>
+</html>

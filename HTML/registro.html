@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Registro - Parrillas El Gran Máximo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="../JS/registro.js" defer></script>
+  <link rel="stylesheet" href="../CSS/registro.css">
+  
+</head>
+<body>
+
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span id="theme-icon">☀️</span>
+  </button>
+
+  <div class="container">
+    <div class="header">
+      <a href="login.html" class="btn-back">←</a>
+      <div>
+        <div class="header-title">Crear Cuenta</div>
+        <div class="header-sub">Únete a Parrillas El Gran Máximo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="steps">
+        <div class="step active" id="s1"></div>
+        <div class="step" id="s2"></div>
+        <div class="step" id="s3"></div>
+      </div>
+
+      <div id="alerta" class="alert"></div>
+
+      <div class="section-label">👤 Datos Personales</div>
+
+      <div class="row">
+        <div class="input-group">
+          <label>Nombre</label>
+          <input type="text" id="nombre" placeholder="Juan" oninput="updateSteps()" />
+        </div>
+        <div class="input-group">
+          <label>Apellido</label>
+          <input type="text" id="apellido" placeholder="Pérez" oninput="updateSteps()" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Cédula</label>
+        <input type="text" id="cedula" placeholder="12345678" oninput="updateSteps()" />
+        <span class="input-icon">🪪</span>
+      </div>
+
+      <div class="input-group">
+        <label>Teléfono</label>
+        <input type="tel" id="telefono" placeholder="04141234567" oninput="updateSteps()" />
+        <span class="input-icon">📱</span>
+      </div>
+
+      <div class="section-label">📧 Acceso</div>
+
+      <div class="input-group">
+        <label>USUARIO</label>
+        <input type="email" id="correo" placeholder="tucorreo@gmail.com" oninput="updateSteps()" />
+        <span class="input-icon">📧</span>
+      </div>
+
+      <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" id="contrasena" placeholder="••••••••" oninput="checkPass()" />
+        <button class="toggle-pass" onclick="togglePass('contrasena', this)" type="button">👁</button>
+        <div class="pass-strength">
+          <div class="pass-bar" id="pb1"></div>
+          <div class="pass-bar" id="pb2"></div>
+          <div class="pass-bar" id="pb3"></div>
+          <div class="pass-bar" id="pb4"></div>
+        </div>
+        <div class="pass-text" id="pass-text">Mínimo 6 caracteres</div>
+      </div>
+
+      <div class="input-group">
+        <label>Confirmar Contraseña</label>
+        <input type="password" id="contrasena2" placeholder="••••••••" oninput="updateSteps()" />
+        <button class="toggle-pass" onclick="togglePass('contrasena2', this)" type="button">👁</button>
+      </div>
+
+      <button class="btn-primary" id="btn-registro" onclick="registrar()">CREAR CUENTA 🔥</button>
+
+      <div class="login-link">
+        ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>
