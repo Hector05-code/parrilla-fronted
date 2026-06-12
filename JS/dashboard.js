@@ -411,118 +411,116 @@ async function guardarProducto() {
     if (!nombre || !precio) { toast('Completa todos los campos', 'err'); return; }
 
     try {
-        // Paso 1 — crear en producto
-        const resP = await fetch(API + '/producto', {
-            method: 'POST',
-            headers: H,
-            body: JSON.stringify({ nombre, precio, tipo })
-        });
-
-        const prodData = await resP.json();
-        if (!resP.ok) { toast('Error al crear producto', 'err'); return; }
-
-        const idProducto = prodData.id;
-
-        // Paso 2 — según tipo
-        if (tipo === 'parrilla') {
-            await fetch(API + '/parrilla', {
-                method: 'POST',
+        if (productoEditandoId) {
+            // ===== EDITAR =====
+            const res = await fetch(API + '/producto/' + productoEditandoId, {
+                method: 'PUT',
                 headers: H,
-                body: JSON.stringify({ id_producto: idProducto, tamaño: tamano })
+                body: JSON.stringify({ nombre, precio, tipo })
             });
-        } else if (tipo === 'bebida') {
-            let imagenUrl = null;
-            if (imagenFile) {
-                const formData = new FormData();
-                formData.append('imagen', imagenFile);
-                const resImg = await fetch(API + '/upload', {
-                    method: 'POST',
-                    headers: { 'authorization': token },
-                    body: formData
-                });
-                const imgData = await resImg.json();
-                imagenUrl = imgData.url;
+
+            if (!res.ok) { toast('Error al actualizar producto', 'err'); return; }
+
+            // Actualizar parrilla o bebida según tipo
+            if (tipo === 'parrilla') {
+                // Buscar la parrilla asociada
+                const resP = await fetch(API + '/parrilla', { headers: H });
+                const parrillas = await resP.json();
+                const parrilla = parrillas.find(p => p.id_producto == productoEditandoId);
+                if (parrilla) {
+                    await fetch(API + '/parrilla/' + parrilla.id_parrilla, {
+                        method: 'PUT',
+                        headers: H,
+                        body: JSON.stringify({ id_producto: productoEditandoId, tamaño: tamano })
+                    });
+                }
+            } else if (tipo === 'bebida') {
+                let imagenUrl = null;
+                if (imagenFile) {
+                    const formData = new FormData();
+                    formData.append('imagen', imagenFile);
+                    const resImg = await fetch(API + '/upload', {
+                        method: 'POST',
+                        headers: { 'authorization': token },
+                        body: formData
+                    });
+                    const imgData = await resImg.json();
+                    imagenUrl = imgData.url;
+                }
+
+                // Buscar la bebida asociada
+                const resB = await fetch(API + '/bebida', { headers: H });
+                const bebidas = await resB.json();
+                const bebida = bebidas.find(b => b.fk_producto_bebidas == productoEditandoId);
+                if (bebida) {
+                    await fetch(API + '/bebida/' + bebida.id_bebidas, {
+                        method: 'PUT',
+                        headers: H,
+                        body: JSON.stringify({
+                            fk_producto_bebidas:  productoEditandoId,
+                            nombre:               nombre,
+                            id_categoria_bebidas: parseInt(document.getElementById('mprod-categoria').value) || bebida.id_categoria_bebidas,
+                            stock:                parseInt(document.getElementById('mprod-stock').value) || bebida.stock,
+                            imagen:               imagenUrl || bebida.imagen
+                        })
+                    });
+                }
             }
 
-            await fetch(API + '/bebida', {
+            toast('Producto actualizado ✅');
+
+        } else {
+            // ===== CREAR =====
+            const resP = await fetch(API + '/producto', {
                 method: 'POST',
                 headers: H,
-                body: JSON.stringify({
-                    fk_producto_bebidas:  idProducto,
-                    nombre:               nombre,
-                    id_categoria_bebidas: parseInt(document.getElementById('mprod-categoria').value) || 1,
-                    stock:                parseInt(document.getElementById('mprod-stock').value) || 0,
-                    imagen:               imagenUrl
-                })
+                body: JSON.stringify({ nombre, precio, tipo })
             });
-        }
 
-        toast(tipo === 'parrilla' ? '🥩 Parrilla creada' : '🧃 Bebida creada');
-        document.getElementById('modal-producto').classList.remove('show');
-        imagenFile = null;
-        cargarProductos();
+            const prodData = await resP.json();
+            if (!resP.ok) { toast('Error al crear producto', 'err'); return; }
 
-    } catch (e) { toast('Error de conexión', 'err'); }
-}
+            const idProducto = prodData.id;
 
-async function guardarProducto() {
-    const nombre = document.getElementById('mprod-nombre').value.trim();
-    const precio = parseFloat(document.getElementById('mprod-precio').value);
-    const tipo   = document.getElementById('mprod-tipo').value;
-    const tamano = document.getElementById('mprod-tamano').value;
-
-    if (!nombre || !precio) { toast('Completa todos los campos', 'err'); return; }
-
-    try {
-        // Paso 1 — crear en producto
-        const resP = await fetch(API + '/producto', {
-            method: 'POST',
-            headers: H,
-            body: JSON.stringify({ nombre, precio, tipo })
-        });
-
-        const prodData = await resP.json();
-        if (!resP.ok) { toast('Error al crear producto', 'err'); return; }
-
-        const idProducto = prodData.id;
-
-        // Paso 2 — según tipo
-        if (tipo === 'parrilla') {
-            await fetch(API + '/parrilla', {
-                method: 'POST',
-                headers: H,
-                body: JSON.stringify({ id_producto: idProducto, tamaño: tamano })
-            });
-        } else if (tipo === 'bebida') {
-            let imagenUrl = null;
-            if (imagenFile) {
-                const formData = new FormData();
-                formData.append('imagen', imagenFile);
-                const resImg = await fetch(API + '/upload', {
+            if (tipo === 'parrilla') {
+                await fetch(API + '/parrilla', {
                     method: 'POST',
-                    headers: { 'authorization': token },
-                    body: formData
+                    headers: H,
+                    body: JSON.stringify({ id_producto: idProducto, tamaño: tamano })
                 });
-                const imgData = await resImg.json();
-                imagenUrl = imgData.url;
+            } else if (tipo === 'bebida') {
+                let imagenUrl = null;
+                if (imagenFile) {
+                    const formData = new FormData();
+                    formData.append('imagen', imagenFile);
+                    const resImg = await fetch(API + '/upload', {
+                        method: 'POST',
+                        headers: { 'authorization': token },
+                        body: formData
+                    });
+                    const imgData = await resImg.json();
+                    imagenUrl = imgData.url;
+                }
+
+                await fetch(API + '/bebida', {
+                    method: 'POST',
+                    headers: H,
+                    body: JSON.stringify({
+                        fk_producto_bebidas:  idProducto,
+                        nombre:               nombre,
+                        id_categoria_bebidas: parseInt(document.getElementById('mprod-categoria').value) || 1,
+                        stock:                parseInt(document.getElementById('mprod-stock').value) || 0,
+                        imagen:               imagenUrl
+                    })
+                });
             }
 
-            await fetch(API + '/bebida', {
-                method: 'POST',
-                headers: H,
-                body: JSON.stringify({
-                    fk_producto_bebidas:  idProducto,
-                    nombre:               nombre,
-                    id_categoria_bebidas: parseInt(document.getElementById('mprod-categoria').value) || 1,
-                    stock:                parseInt(document.getElementById('mprod-stock').value) || 0,
-                    imagen:               imagenUrl
-                })
-            });
+            toast(tipo === 'parrilla' ? '🥩 Parrilla creada' : '🧃 Bebida creada');
         }
 
-        toast(tipo === 'parrilla' ? '🥩 Parrilla creada' : '🧃 Bebida creada');
         document.getElementById('modal-producto').classList.remove('show');
         imagenFile = null;
+        productoEditandoId = null;
         cargarProductos();
 
     } catch (e) { toast('Error de conexión', 'err'); }
