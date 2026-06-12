@@ -209,26 +209,35 @@ async function registrarNuevoCliente() {
 
   if (!nombre || !apellido || !cedula) { toast('Completa nombre, apellido y cédula', 'err'); return; }
 
+  // Generar credenciales automáticas sin que el empleado las vea
+  const correoAuto    = cedula ;
+  const contraseñaAuto = apellido + '123';
+
   try {
-    const res = await fetch(API + '/cliente', {
+    const res = await fetch(API + '/auth/registro', {
       method: 'POST',
       headers: H,
       body: JSON.stringify({
-        nombre, apellido, cedula, telefono,
-        correo: cedula + '@temp.com',
-        contraseña: cedula
+        nombre,
+        apellido,
+        cedula,
+        telefono,
+        correo:     correoAuto,
+        contraseña: contraseñaAuto
       })
     });
 
     const data = await res.json();
+
     if (res.ok) {
-      // Buscar el cliente recién creado
       const resBuscar = await fetch(API + '/cliente/cedula/' + cedula, { headers: H });
       const cliente = await resBuscar.json();
       clienteActual = cliente;
       mostrarClienteEncontrado(cliente);
       toast('Cliente registrado ✅');
-    } else { toast(data.mensaje || 'Error al registrar', 'err'); }
+    } else {
+      toast(data.mensaje || 'Error al registrar', 'err');
+    }
   } catch(e) { toast('Error de conexión', 'err'); }
 }
 
