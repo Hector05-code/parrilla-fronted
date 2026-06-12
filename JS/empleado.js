@@ -350,35 +350,40 @@ async function cargarMetodosPagoEmp() {
     const res = await fetch(API + '/metodopago', { headers: H });
     const metodos = await res.json();
     document.getElementById('emp-metodos-list').innerHTML = metodos.map(m => `
-      <button class="metodo-pill" onclick="seleccionarMetodoEmp(${m.id_metodos_pago}, this)">${m.nombre}</button>
+      <button class="metodo-pill" onclick="seleccionarMetodoEmp(${m.id_metodos_pago}, this, '${m.nombre}')">${m.nombre}</button>
     `).join('');
   } catch(e) {}
 }
 
-function seleccionarMetodoEmp(id, btn) {
+function seleccionarMetodoEmp(id, btn, nombre) {
   metodoSeleccionado = id;
   document.querySelectorAll('.metodo-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
+  const sinReferencia = ['efectivo', 'divisa'].some(m => nombre.toLowerCase().includes(m));
+  const campoRef = document.getElementById('emp-referencia');
+  campoRef.style.display = sinReferencia ? 'none' : 'block';
+  if (sinReferencia) campoRef.value = '';
 }
 
 /* ============================================
    CONFIRMAR PEDIDO
 ============================================ */
 async function confirmarPedido() {
-  if (!clienteActual)        { toast('Busca o registra un cliente primero', 'err'); return; }
-  if (!carritoEmp.length)    { toast('Agrega productos al pedido', 'err');          return; }
-  if (!metodoSeleccionado)   { toast('Selecciona un método de pago', 'err');        return; }
+  if (!clienteActual)      { toast('Busca o registra un cliente primero', 'err'); return; }
+  if (!carritoEmp.length)  { toast('Agrega productos al pedido', 'err');          return; }
+  if (!metodoSeleccionado) { toast('Selecciona un método de pago', 'err');        return; }
 
-  const ref = document.getElementById('emp-referencia').value.trim();
-  if (!ref) { toast('Ingresa la referencia de pago', 'err'); return; }
+  let ref = document.getElementById('emp-referencia').value.trim();
+  if (!ref) ref = 'S/REF-' + Date.now();
 
   if (tipoPedido === 'delivery') {
     const dir = document.getElementById('direccion-input').value.trim();
     if (!dir) { toast('Ingresa la dirección de entrega', 'err'); return; }
   }
 
-  const total    = carritoEmp.reduce((a, c) => a + parseFloat(c.precio) * c.cantidad, 0);
-  const totalBs  = total * tasaDolar;
+  const total   = carritoEmp.reduce((a, c) => a + parseFloat(c.precio) * c.cantidad, 0);
+  const totalBs = total * tasaDolar;
   const direccion = tipoPedido === 'delivery' ? document.getElementById('direccion-input').value.trim() : null;
 
   try {
@@ -401,7 +406,6 @@ async function confirmarPedido() {
     const pedidoData = await resPed.json();
     if (!resPed.ok) { toast('Error al crear pedido', 'err'); return; }
 
-    // Crear detalles
     await Promise.all(carritoEmp.map(item =>
       fetch(API + '/detalle', {
         method: 'POST',
@@ -417,14 +421,14 @@ async function confirmarPedido() {
 
     toast('¡Pedido #' + pedidoData.id + ' creado! 🔥');
 
-    // Limpiar
-    carritoEmp       = [];
-    clienteActual    = null;
+    carritoEmp         = [];
+    clienteActual      = null;
     metodoSeleccionado = null;
-    tipoPedido       = 'sitio';
-    document.getElementById('cedula-buscar').value    = '';
-    document.getElementById('emp-referencia').value   = '';
-    document.getElementById('direccion-input').value  = '';
+    tipoPedido         = 'sitio';
+    document.getElementById('cedula-buscar').value              = '';
+    document.getElementById('emp-referencia').value             = '';
+    document.getElementById('emp-referencia').style.display     = 'block';
+    document.getElementById('direccion-input').value            = '';
     document.getElementById('cliente-encontrado').style.display = 'none';
     document.getElementById('form-nuevo-cliente').style.display = 'none';
     seleccionarTipo('sitio');
