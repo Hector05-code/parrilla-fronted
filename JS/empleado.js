@@ -144,11 +144,35 @@ function abrirCambiarEstado(id, estadoActual) {
 async function cambiarEstado(nuevoEstado) {
   const id = pedidoActualId;
   if (!id) { toast('No hay pedido seleccionado', 'err'); return; }
+
   try {
-    const res = await fetch(`${API}/pedido/${id}/estado`, {
-      method: 'PATCH',
+    if (nuevoEstado === 'cancelado') {
+      // Eliminar detalles primero
+      const resDetalle = await fetch(API + '/detalle', { headers: H });
+      const detalles = await resDetalle.json();
+      const detallesPedido = detalles.filter(d => d.id_pedidos == id);
+      await Promise.all(detallesPedido.map(d =>
+        fetch(API + '/detalle/' + d.id_detalle_pedido, { method: 'DELETE', headers: H })
+      ));
+
+      // Luego eliminar el pedido
+      const res = await fetch(API + '/pedido/' + id, { method: 'DELETE', headers: H });
+      if (res.ok) {
+        toast('Pedido cancelado y eliminado');
+        closeModal('modal-estado');
+        cargarPedidosActivos();
+      } else { toast('Error al eliminar pedido', 'err'); }
+      return;
+    }
+
+    // Si no es cancelado solo cambia el estado
+    const resPed = await fetch(API + '/pedido/' + id, { headers: H });
+    const pedido = await resPed.json();
+
+    const res = await fetch(API + '/pedido/' + id, {
+      method: 'PUT',
       headers: H,
-      body: JSON.stringify({ estado: nuevoEstado })
+      body: JSON.stringify({ ...pedido, estado: nuevoEstado })
     });
 
     if (res.ok) {
@@ -156,6 +180,7 @@ async function cambiarEstado(nuevoEstado) {
       closeModal('modal-estado');
       cargarPedidosActivos();
     } else { toast('Error al cambiar estado', 'err'); }
+
   } catch(e) { toast('Error de conexión', 'err'); }
 }
 
