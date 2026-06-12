@@ -435,6 +435,7 @@ async function cargarPedidos() {
 }
 
 async function guardarProducto() {
+  console.log('ID editando:', productoEditandoId); // ← agrega esto
     const nombre = document.getElementById('mprod-nombre').value.trim();
     const precio = parseFloat(document.getElementById('mprod-precio').value);
     const tipo   = document.getElementById('mprod-tipo').value;
