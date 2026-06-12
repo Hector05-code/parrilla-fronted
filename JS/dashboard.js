@@ -291,6 +291,27 @@ async function cargarPedidos() {
     if (!pedido) return;
 
     try {
+      if (estado === 'cancelado') {
+        // Eliminar detalles primero
+        const resDetalle = await fetch(API + '/detalle', { headers });
+        const detalles = await resDetalle.json();
+        const detallesPedido = detalles.filter(d => d.id_pedidos == id);
+        await Promise.all(detallesPedido.map(d =>
+          fetch(API + '/detalle/' + d.id_detalle_pedido, { method: 'DELETE', headers })
+        ));
+
+        // Luego eliminar el pedido
+        const res = await fetch(API + '/pedido/' + id, { method: 'DELETE', headers });
+        if (res.ok) {
+          toast('Pedido cancelado y eliminado');
+          cerrarModal('modal-pedido');
+          cargarPedidos();
+          cargarEstadisticas();
+        } else { toast('Error al eliminar pedido', 'err'); }
+        return;
+      }
+
+      // Si no es cancelado solo actualiza
       const res = await fetch(`${API}/pedido/${id}`, {
         method: 'PUT',
         headers,
@@ -302,9 +323,10 @@ async function cargarPedidos() {
         cerrarModal('modal-pedido');
         cargarPedidos();
         cargarEstadisticas();
-      }
+      } else { toast('Error al actualizar pedido', 'err'); }
+
     } catch (e) { toast('Error al actualizar pedido', 'err'); }
-  }
+}
 
   // =================== PRODUCTOS ===================
   async function cargarProductos() {
