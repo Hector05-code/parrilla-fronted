@@ -359,7 +359,7 @@ async function cargarPedidos() {
     `).join('');
   }
 
-  function abrirModalProducto(id = null) {
+  async function abrirModalProducto(id = null) {
     productoEditandoId = id;
     imagenFile = null;
 
@@ -368,35 +368,67 @@ async function cargarPedidos() {
         document.getElementById('modal-producto-title').textContent = '✏️ Editar Producto';
         document.getElementById('mprod-nombre').value = p.nombre;
         document.getElementById('mprod-precio').value = p.precio;
-        document.getElementById('mprod-tipo').value = p.tipo;
+        document.getElementById('mprod-tipo').value   = p.tipo;
         document.getElementById('mprod-tamano').value = p.tamano || 'mediana';
-        document.getElementById('mprod-stock').value = '0';
-
-        // Mostrar imagen existente si es bebida y tiene imagen
-        const preview = document.getElementById('mprod-img-preview');
-        const label   = document.getElementById('mprod-img-label');
-        if (p.tipo === 'bebida' && p.imagen) {
-            preview.src = p.imagen;
-            preview.style.display = 'block';
-            label.style.display = 'none';
-        } else {
-            preview.style.display = 'none';
-            label.style.display = 'flex';
-        }
+        document.getElementById('mprod-stock').value  = '0';
 
         toggleTipoFields(p.tipo);
-        if (p.tipo === 'bebida') cargarCategorias();
+
+        if (p.tipo === 'bebida') {
+            await cargarCategorias();
+
+            // Buscar bebida asociada para obtener stock e imagen real
+            try {
+                const res = await fetch(API + '/bebida', { headers: H });
+                const bebidas = await res.json();
+                const bebida = bebidas.find(b => b.fk_producto_bebidas == id);
+
+                if (bebida) {
+                    document.getElementById('mprod-stock').value = bebida.stock || 0;
+
+                    const preview = document.getElementById('mprod-img-preview');
+                    const label   = document.getElementById('mprod-img-label');
+
+                    if (bebida.imagen) {
+                        preview.src           = API + bebida.imagen;
+                        preview.style.display = 'block';
+                        label.style.display   = 'none';
+                    } else {
+                        preview.style.display = 'none';
+                        label.style.display   = 'flex';
+                    }
+
+                    // Seleccionar categoría correcta
+                    document.getElementById('mprod-categoria').value = bebida.id_categoria_bebidas;
+                }
+            } catch(e) { toast('Error al cargar datos de bebida', 'err'); }
+
+        } else if (p.tipo === 'parrilla') {
+            // Buscar tamaño real de la parrilla
+            try {
+                const res = await fetch(API + '/parrilla', { headers: H });
+                const parrillas = await res.json();
+                const parrilla = parrillas.find(pa => pa.id_producto == id);
+                if (parrilla) {
+                    document.getElementById('mprod-tamano').value = parrilla['tamaño'] || 'mediana';
+                }
+            } catch(e) {}
+
+            document.getElementById('mprod-img-preview').style.display = 'none';
+            document.getElementById('mprod-img-label').style.display   = 'flex';
+        }
+
     } else {
-        document.getElementById('modal-producto-title').textContent = '+ Nuevo Producto';
-        document.getElementById('mprod-nombre').value = '';
-        document.getElementById('mprod-precio').value = '';
-        document.getElementById('mprod-tipo').value = 'parrilla';
-        document.getElementById('mprod-tamano').value = 'mediana';
-        document.getElementById('mprod-stock').value = '0';
-        document.getElementById('mprod-img-preview').style.display = 'none';
-        document.getElementById('mprod-img-label').style.display = 'flex';
+        document.getElementById('modal-producto-title').textContent   = '+ Nuevo Producto';
+        document.getElementById('mprod-nombre').value                 = '';
+        document.getElementById('mprod-precio').value                 = '';
+        document.getElementById('mprod-tipo').value                   = 'parrilla';
+        document.getElementById('mprod-tamano').value                 = 'mediana';
+        document.getElementById('mprod-stock').value                  = '0';
+        document.getElementById('mprod-img-preview').style.display    = 'none';
+        document.getElementById('mprod-img-label').style.display      = 'flex';
         toggleTipoFields('parrilla');
-        cargarCategorias(); // cargar siempre para que estén listas al cambiar a bebida
+        cargarCategorias();
     }
 
     document.getElementById('modal-producto').classList.add('show');
